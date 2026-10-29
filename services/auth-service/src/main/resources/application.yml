@@ -39,3 +39,11 @@ springdoc:
     enabled: ${API_DOCS_ENABLED:false}
   swagger-ui:
     enabled: ${API_DOCS_ENABLED:false}
+
+auth:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER:auth-service}
+    audience: ${AUTH_JWT_AUDIENCE}
+    access-ttl: ${AUTH_JWT_ACCESS_TTL:15m}
+    refresh-ttl: ${AUTH_JWT_REFRESH_TTL:30d}
+    private-key: ${AUTH_JWT_PRIVATE_KEY}
