@@ -1,6 +1,6 @@
 package com.mentormatching.auth.service;
 
-import com.mentormatching.auth.service.dto.IssuedTokens;
+import com.mentormatching.auth.dto.response.IssuedTokens;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,9 +12,9 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
-import com.mentormatching.auth.account.entity.Account;
-import com.mentormatching.auth.token.entity.RefreshToken;
-import com.mentormatching.auth.token.repository.RefreshTokenRepository;
+import com.mentormatching.auth.entity.Account;
+import com.mentormatching.auth.entity.RefreshToken;
+import com.mentormatching.auth.repository.RefreshTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

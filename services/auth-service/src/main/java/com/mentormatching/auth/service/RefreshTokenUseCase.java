@@ -1,13 +1,13 @@
 package com.mentormatching.auth.service;
 
-import com.mentormatching.auth.service.dto.IssuedTokens;
+import com.mentormatching.auth.dto.response.IssuedTokens;
 import java.time.Instant;
 
-import com.mentormatching.auth.account.entity.AccountStatus;
+import com.mentormatching.auth.entity.AccountStatus;
 import com.mentormatching.auth.exception.ApiException;
 import com.mentormatching.auth.exception.ErrorCode;
-import com.mentormatching.auth.role.repository.AccountRoleRepository;
-import com.mentormatching.auth.token.repository.RefreshTokenRepository;
+import com.mentormatching.auth.repository.AccountRoleRepository;
+import com.mentormatching.auth.repository.RefreshTokenRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

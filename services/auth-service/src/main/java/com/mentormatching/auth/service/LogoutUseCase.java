@@ -2,7 +2,7 @@ package com.mentormatching.auth.service;
 
 import java.time.Instant;
 
-import com.mentormatching.auth.token.repository.RefreshTokenRepository;
+import com.mentormatching.auth.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

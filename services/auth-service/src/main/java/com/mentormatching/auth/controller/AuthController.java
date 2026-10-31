@@ -3,11 +3,12 @@ package com.mentormatching.auth.controller;
 import java.time.Duration;
 import java.time.Instant;
 
-import com.mentormatching.auth.controller.dto.ApiResponse;
-import com.mentormatching.auth.controller.dto.AuthTokensResponse;
-import com.mentormatching.auth.controller.cookie.RefreshTokenCookieService;
+import com.mentormatching.auth.dto.response.ApiResponse;
+import com.mentormatching.auth.dto.response.AuthTokensResponse;
+import com.mentormatching.auth.service.RefreshTokenCookieService;
 import com.mentormatching.auth.service.*;
-import com.mentormatching.auth.service.dto.*;
+import com.mentormatching.auth.dto.request.*;
+import com.mentormatching.auth.dto.response.*;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;

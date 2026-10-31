@@ -1,17 +1,18 @@
 package com.mentormatching.auth.service;
 
-import com.mentormatching.auth.service.dto.IssuedTokens;
+import com.mentormatching.auth.dto.response.IssuedTokens;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Locale;
 
-import com.mentormatching.auth.account.entity.*;
-import com.mentormatching.auth.account.repository.*;
+import com.mentormatching.auth.entity.*;
+import com.mentormatching.auth.repository.*;
 import com.mentormatching.auth.exception.*;
-import com.mentormatching.auth.role.entity.AccountRole;
-import com.mentormatching.auth.role.repository.*;
-import com.mentormatching.auth.security.AccountUserDetailsService.AccountPrincipal;
-import com.mentormatching.auth.service.dto.*;
+import com.mentormatching.auth.entity.AccountRole;
+import com.mentormatching.auth.repository.*;
+import com.mentormatching.auth.service.AccountUserDetailsService.AccountPrincipal;
+import com.mentormatching.auth.dto.request.*;
+import com.mentormatching.auth.dto.response.*;
 import jakarta.validation.Validator;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.*;

@@ -1,7 +1,7 @@
 package com.mentormatching.auth.config;
 
-import com.mentormatching.auth.security.AccountUserDetailsService;
-import com.mentormatching.auth.security.OriginFilter;
+import com.mentormatching.auth.service.AccountUserDetailsService;
+import com.mentormatching.auth.filter.OriginFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.context.annotation.Bean;
