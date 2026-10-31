@@ -14,6 +14,7 @@ import com.mentormatching.auth.exception.ErrorCode;
 import com.mentormatching.auth.role.entity.AccountRole;
 import com.mentormatching.auth.role.repository.AccountRoleRepository;
 import com.mentormatching.auth.role.repository.RoleRepository;
+import com.mentormatching.auth.security.AccountUserDetailsService.AccountPrincipal;
 import com.mentormatching.auth.service.AuthService;
 import com.mentormatching.auth.service.TokenService;
 import com.mentormatching.auth.service.dto.LoginCommand;
@@ -21,6 +22,10 @@ import com.mentormatching.auth.service.dto.RegisterCommand;
 import com.mentormatching.auth.service.dto.RegisterResult;
 import jakarta.validation.Validator;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +45,11 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
     private final TokenService tokenService;
+    private final AuthenticationManager authenticationManager;
 
     public AuthServiceImpl(AccountRepository accounts, PasswordCredentialRepository credentials,
                            RoleRepository roles, AccountRoleRepository accountRoles,
-                           PasswordEncoder passwordEncoder, Validator validator, TokenService tokenService) {
+                           PasswordEncoder passwordEncoder, Validator validator, TokenService tokenService, AuthenticationManager authenticationManager) {
         this.accounts = accounts;
         this.credentials = credentials;
         this.roles = roles;
@@ -51,6 +57,7 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
         this.tokenService = tokenService;
+        this.authenticationManager = authenticationManager;
     }
 
     /**
@@ -130,13 +137,18 @@ public class AuthServiceImpl implements AuthService {
             throw invalidCredentials();
         }
 
-        Account account = accounts.findByLoginEmail(email).orElseThrow(AuthServiceImpl::invalidCredentials);
-        PasswordCredential credential = credentials.findById(account.getId()).orElseThrow(AuthServiceImpl::invalidCredentials);
-
-        if (!passwordEncoder.matches(command.password(), credential.getPasswordHash())
-                || account.getStatus() != AccountStatus.ACTIVE) {
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(email, command.password()));
+        } catch (AuthenticationException ex) {
             throw invalidCredentials();
         }
+
+        // Get principle account from Authentication
+        AccountPrincipal principal = (AccountPrincipal) authentication.getPrincipal();
+
+        Account account = accounts.findById(principal.getAccountId()).orElseThrow(() -> new IllegalStateException("Authenticated account no longer exists"));
 
         var roleCodes = accountRoles.findByAccount_Id(account.getId())
                 .stream()
