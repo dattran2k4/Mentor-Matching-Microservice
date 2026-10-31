@@ -1,29 +1,19 @@
-package com.mentormatching.auth.service.impl;
+package com.mentormatching.auth.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Locale;
 
-import com.mentormatching.auth.account.entity.Account;
-import com.mentormatching.auth.account.entity.AccountStatus;
-import com.mentormatching.auth.account.entity.PasswordCredential;
-import com.mentormatching.auth.account.repository.AccountRepository;
-import com.mentormatching.auth.account.repository.PasswordCredentialRepository;
-import com.mentormatching.auth.exception.ApiException;
-import com.mentormatching.auth.exception.ErrorCode;
+import com.mentormatching.auth.account.entity.*;
+import com.mentormatching.auth.account.repository.*;
+import com.mentormatching.auth.exception.*;
 import com.mentormatching.auth.role.entity.AccountRole;
-import com.mentormatching.auth.role.repository.AccountRoleRepository;
-import com.mentormatching.auth.role.repository.RoleRepository;
+import com.mentormatching.auth.role.repository.*;
 import com.mentormatching.auth.security.AccountUserDetailsService.AccountPrincipal;
-import com.mentormatching.auth.service.AuthService;
-import com.mentormatching.auth.service.TokenService;
-import com.mentormatching.auth.service.dto.LoginCommand;
-import com.mentormatching.auth.service.dto.RegisterCommand;
-import com.mentormatching.auth.service.dto.RegisterResult;
+import com.mentormatching.auth.service.dto.*;
 import jakarta.validation.Validator;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,37 +24,30 @@ import org.springframework.transaction.annotation.Transactional;
  * Triển khai nghiệp vụ đăng ký tài khoản.
  */
 @Service
-public class AuthServiceImpl implements AuthService {
+public class RegisterUseCase {
 
     private static final String DEFAULT_ROLE = "LEANER";
-
     private final AccountRepository accounts;
     private final PasswordCredentialRepository credentials;
     private final RoleRepository roles;
     private final AccountRoleRepository accountRoles;
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
-    private final TokenService tokenService;
-    private final AuthenticationManager authenticationManager;
 
-    public AuthServiceImpl(AccountRepository accounts, PasswordCredentialRepository credentials,
-                           RoleRepository roles, AccountRoleRepository accountRoles,
-                           PasswordEncoder passwordEncoder, Validator validator, TokenService tokenService, AuthenticationManager authenticationManager) {
+    public RegisterUseCase(AccountRepository accounts, PasswordCredentialRepository credentials,
+                           RoleRepository roles, AccountRoleRepository accountRoles, PasswordEncoder passwordEncoder, Validator validator) {
         this.accounts = accounts;
         this.credentials = credentials;
         this.roles = roles;
         this.accountRoles = accountRoles;
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
-        this.tokenService = tokenService;
-        this.authenticationManager = authenticationManager;
     }
 
     /**
      * Tạo tài khoản, mật khẩu đã hash và role mặc định trong cùng transaction.
      * Email được chuẩn hóa bằng cách bỏ khoảng trắng hai đầu và chuyển chữ thường.
      */
-    @Override
     @Transactional
     public RegisterResult register(RegisterCommand command) {
 
@@ -114,51 +97,6 @@ public class AuthServiceImpl implements AuthService {
         accountRoles.save(assignment);
 
         return new RegisterResult(account.getId(), account.getStatus());
-    }
-
-    /**
-     * Xác thực mật khẩu và cấp token cho tài khoản đang hoạt động.
-     *
-     * @param command thông tin đăng nhập
-     * @return cặp token đã phát hành
-     */
-    @Override
-    @Transactional
-    public TokenService.IssuedTokens login(LoginCommand command) {
-
-        if (command == null || command.email() == null || command.password() == null) {
-            throw invalidCredentials();
-        }
-
-        String email = command.email().trim().toLowerCase(Locale.ROOT);
-
-        if (!validator.validate(new LoginCommand(email, command.password())).isEmpty()
-                || command.password().getBytes(StandardCharsets.UTF_8).length > 72) {
-            throw invalidCredentials();
-        }
-
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(email, command.password()));
-        } catch (AuthenticationException ex) {
-            throw invalidCredentials();
-        }
-
-        // Get principle account from Authentication
-        AccountPrincipal principal = (AccountPrincipal) authentication.getPrincipal();
-
-        Account account = accounts.findById(principal.getAccountId()).orElseThrow(() -> new IllegalStateException("Authenticated account no longer exists"));
-
-        var roleCodes = accountRoles.findByAccount_Id(account.getId())
-                .stream()
-                .map(assignment -> assignment.getRole().getCode()).toList();
-
-        return tokenService.issue(account, roleCodes);
-    }
-
-    private static ApiException invalidCredentials() {
-        return new ApiException(HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS, "Invalid credentials or account unavailable.");
     }
 
 }
