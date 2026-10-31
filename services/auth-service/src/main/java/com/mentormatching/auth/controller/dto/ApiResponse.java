@@ -1,5 +1,7 @@
 package com.mentormatching.auth.controller.dto;
 
+import lombok.Builder;
+
 /**
  * Cấu trúc response thành công của API.
  *
@@ -10,5 +12,6 @@ package com.mentormatching.auth.controller.dto;
  * @param data dữ liệu trả về
  * @param <T> kiểu dữ liệu trả về
  */
+@Builder
 public record ApiResponse<T>(int status, String code, boolean success, String message, T data) {
 }
