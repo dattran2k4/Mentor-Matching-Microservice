@@ -58,9 +58,9 @@ public class ProblemResponses {
      * @param request HTTP request hiện tại
      * @return ProblemDetail mới, chưa được ghi ra response
      */
-    public ProblemDetail create(HttpStatusCode status, String code, String detail, HttpServletRequest request) {
+    public ProblemDetail create(HttpStatusCode status, ErrorCode code, String detail, HttpServletRequest request) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
-        problem.setType(URI.create("urn:mentor-matching:problem:" + code.toLowerCase(Locale.ROOT).replace('_', '-')));
+        problem.setType(URI.create("urn:mentor-matching:problem:" + code.name().toLowerCase(Locale.ROOT).replace('_', '-')));
         Object original = request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI);
         String path = original instanceof String value ? value : request.getRequestURI();
         try {
@@ -69,7 +69,7 @@ public class ProblemResponses {
             // A malformed request path must not break the error handler itself.
             problem.setInstance(URI.create("urn:request:" + requestId(request)));
         }
-        problem.setProperty("code", code);
+        problem.setProperty("code", code.name());
         problem.setProperty("requestId", requestId(request));
         return problem;
     }
@@ -83,18 +83,18 @@ public class ProblemResponses {
      * @return body lỗi chuẩn có metadata của request
      */
     public ProblemDetail standard(HttpStatusCode status, HttpServletRequest request) {
-        String code = switch (status.value()) {
-            case 400 -> "INVALID_REQUEST";
-            case 401 -> "AUTHENTICATION_REQUIRED";
-            case 403 -> "ACCESS_DENIED";
-            case 404 -> "RESOURCE_NOT_FOUND";
-            case 405 -> "METHOD_NOT_ALLOWED";
-            case 406 -> "NOT_ACCEPTABLE";
-            case 409 -> "CONFLICT";
-            case 415 -> "UNSUPPORTED_MEDIA_TYPE";
-            case 429 -> "TOO_MANY_REQUESTS";
-            case 503 -> "SERVICE_UNAVAILABLE";
-            default -> status.is5xxServerError() ? "INTERNAL_SERVER_ERROR" : "REQUEST_REJECTED";
+        ErrorCode code = switch (status.value()) {
+            case 400 -> ErrorCode.INVALID_REQUEST;
+            case 401 -> ErrorCode.AUTHENTICATION_REQUIRED;
+            case 403 -> ErrorCode.ACCESS_DENIED;
+            case 404 -> ErrorCode.RESOURCE_NOT_FOUND;
+            case 405 -> ErrorCode.METHOD_NOT_ALLOWED;
+            case 406 -> ErrorCode.NOT_ACCEPTABLE;
+            case 409 -> ErrorCode.CONFLICT;
+            case 415 -> ErrorCode.UNSUPPORTED_MEDIA_TYPE;
+            case 429 -> ErrorCode.TOO_MANY_REQUESTS;
+            case 503 -> ErrorCode.SERVICE_UNAVAILABLE;
+            default -> status.is5xxServerError() ? ErrorCode.INTERNAL_SERVER_ERROR : ErrorCode.REQUEST_REJECTED;
         };
         String detail = switch (status.value()) {
             case 400 -> "The request is invalid.";
