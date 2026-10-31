@@ -47,3 +47,9 @@ auth:
     access-ttl: ${AUTH_JWT_ACCESS_TTL:15m}
     refresh-ttl: ${AUTH_JWT_REFRESH_TTL:30d}
     private-key-path: ${AUTH_JWT_PRIVATE_KEY_PATH}
+  cors:
+    allowed-origins: ${AUTH_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  cookie:
+    path: ${AUTH_COOKIE_PATH:/api/v1/auth}
+    secure: ${AUTH_COOKIE_SECURE:false}
+    same-site: ${AUTH_COOKIE_SAME_SITE:Strict}

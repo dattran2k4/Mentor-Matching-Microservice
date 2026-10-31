@@ -2,9 +2,7 @@ package com.mentormatching.auth.config;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
-import com.mentormatching.auth.security.AuthOriginFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,8 +33,4 @@ public class CorsConfig {
         return source;
     }
 
-    /** Tạo filter kiểm tra cùng danh sách origin cho các endpoint xác thực. */
-    public AuthOriginFilter authOriginFilter() {
-        return new AuthOriginFilter(Set.copyOf(allowedOrigins));
-    }
 }

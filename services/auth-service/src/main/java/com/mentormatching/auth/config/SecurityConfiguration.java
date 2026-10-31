@@ -1,6 +1,9 @@
 package com.mentormatching.auth.config;
 
 import com.mentormatching.auth.security.AccountUserDetailsService;
+import com.mentormatching.auth.security.OriginFilter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,7 +35,7 @@ public class SecurityConfiguration {
      * Cấu hình xác thực email và mật khẩu qua Spring Security.
      *
      * @param userDetailsService bộ tải tài khoản
-     * @param passwordEncoder bộ kiểm tra mật khẩu
+     * @param passwordEncoder    bộ kiểm tra mật khẩu
      * @return bộ quản lý xác thực
      */
     @Bean
@@ -42,10 +45,15 @@ public class SecurityConfiguration {
         return new ProviderManager(provider);
     }
 
-    /** Cho phép các endpoint xác thực công khai; API sử dụng token trong body, không dùng cookie. */
+    /**
+     * Cho phép các endpoint xác thực công khai và kiểm tra Origin cho cookie.
+     */
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, OriginFilter originFilter) throws Exception {
         return http
+                .cors(cors -> {
+                })
+                .addFilterBefore(originFilter, CsrfFilter.class)
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login",
                         "/api/v1/auth/refresh-token", "/api/v1/auth/logout"))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -55,6 +63,16 @@ public class SecurityConfiguration {
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
                 .build();
+    }
+
+    /**
+     * Filter chỉ chạy trong Spring Security, không đăng ký thêm ở servlet container.
+     */
+    @Bean
+    FilterRegistrationBean<OriginFilter> authOriginFilterRegistration(OriginFilter filter) {
+        var registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 
 }
