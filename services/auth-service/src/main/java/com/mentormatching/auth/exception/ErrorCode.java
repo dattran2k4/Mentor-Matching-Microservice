@@ -6,6 +6,7 @@ package com.mentormatching.auth.exception;
 public enum ErrorCode {
     VALIDATION_ERROR,
     INVALID_REGISTRATION,
+    INVALID_CREDENTIALS,
     PASSWORD_MISMATCH,
     EMAIL_ALREADY_EXISTS,
     INVALID_REQUEST,

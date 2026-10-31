@@ -1,5 +1,6 @@
 package com.mentormatching.auth.service;
 
+import com.mentormatching.auth.service.dto.LoginCommand;
 import com.mentormatching.auth.service.dto.RegisterCommand;
 import com.mentormatching.auth.service.dto.RegisterResult;
 
@@ -14,4 +15,12 @@ public interface AuthService {
      * @return định danh và trạng thái tài khoản
      */
     RegisterResult register(RegisterCommand command);
+
+    /**
+     * Xác thực tài khoản và phát hành cặp token.
+     *
+     * @param command thông tin đăng nhập
+     * @return cặp token và thời điểm hết hạn
+     */
+    TokenService.IssuedTokens login(LoginCommand command);
 }

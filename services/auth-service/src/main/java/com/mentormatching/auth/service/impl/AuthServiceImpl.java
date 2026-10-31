@@ -15,6 +15,8 @@ import com.mentormatching.auth.role.entity.AccountRole;
 import com.mentormatching.auth.role.repository.AccountRoleRepository;
 import com.mentormatching.auth.role.repository.RoleRepository;
 import com.mentormatching.auth.service.AuthService;
+import com.mentormatching.auth.service.TokenService;
+import com.mentormatching.auth.service.dto.LoginCommand;
 import com.mentormatching.auth.service.dto.RegisterCommand;
 import com.mentormatching.auth.service.dto.RegisterResult;
 import jakarta.validation.Validator;
@@ -37,16 +39,18 @@ public class AuthServiceImpl implements AuthService {
     private final AccountRoleRepository accountRoles;
     private final PasswordEncoder passwordEncoder;
     private final Validator validator;
+    private final TokenService tokenService;
 
     public AuthServiceImpl(AccountRepository accounts, PasswordCredentialRepository credentials,
                            RoleRepository roles, AccountRoleRepository accountRoles,
-                           PasswordEncoder passwordEncoder, Validator validator) {
+                           PasswordEncoder passwordEncoder, Validator validator, TokenService tokenService) {
         this.accounts = accounts;
         this.credentials = credentials;
         this.roles = roles;
         this.accountRoles = accountRoles;
         this.passwordEncoder = passwordEncoder;
         this.validator = validator;
+        this.tokenService = tokenService;
     }
 
     /**
@@ -104,4 +108,45 @@ public class AuthServiceImpl implements AuthService {
 
         return new RegisterResult(account.getId(), account.getStatus());
     }
+
+    /**
+     * Xác thực mật khẩu và cấp token cho tài khoản đang hoạt động.
+     *
+     * @param command thông tin đăng nhập
+     * @return cặp token đã phát hành
+     */
+    @Override
+    @Transactional
+    public TokenService.IssuedTokens login(LoginCommand command) {
+
+        if (command == null || command.email() == null || command.password() == null) {
+            throw invalidCredentials();
+        }
+
+        String email = command.email().trim().toLowerCase(Locale.ROOT);
+
+        if (!validator.validate(new LoginCommand(email, command.password())).isEmpty()
+                || command.password().getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw invalidCredentials();
+        }
+
+        Account account = accounts.findByLoginEmail(email).orElseThrow(AuthServiceImpl::invalidCredentials);
+        PasswordCredential credential = credentials.findById(account.getId()).orElseThrow(AuthServiceImpl::invalidCredentials);
+
+        if (!passwordEncoder.matches(command.password(), credential.getPasswordHash())
+                || account.getStatus() != AccountStatus.ACTIVE) {
+            throw invalidCredentials();
+        }
+
+        var roleCodes = accountRoles.findByAccount_Id(account.getId())
+                .stream()
+                .map(assignment -> assignment.getRole().getCode()).toList();
+
+        return tokenService.issue(account, roleCodes);
+    }
+
+    private static ApiException invalidCredentials() {
+        return new ApiException(HttpStatus.UNAUTHORIZED, ErrorCode.INVALID_CREDENTIALS, "Invalid credentials or account unavailable.");
+    }
+
 }
