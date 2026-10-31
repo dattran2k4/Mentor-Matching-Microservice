@@ -1,5 +1,6 @@
 package com.mentormatching.auth.service;
 
+import com.mentormatching.auth.service.dto.IssuedTokens;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -80,6 +81,23 @@ public class TokenService {
     @Transactional
     public IssuedTokens issue(Account account, List<String> roles) {
 
+        return issueInFamily(account, roles, UUID.randomUUID()).tokens();
+    }
+
+    /**
+     * Tạo token kế tiếp trong cùng family và thu hồi token hiện tại.
+     * Caller phải khóa và kiểm tra token hiện tại trong transaction.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public IssuedTokens rotate(RefreshToken current, List<String> roles) {
+        var issued = issueInFamily(current.getAccount(), roles, current.getFamilyId());
+        current.setRevokedAt(Instant.now());
+        current.setReplacedById(issued.refreshId());
+        refreshTokenRepository.saveAndFlush(current);
+        return issued.tokens();
+    }
+
+    private IssuedRefresh issueInFamily(Account account, List<String> roles, UUID familyId) {
         Instant now = Instant.now();
 
         // Payload (claims) của access token JWT.
@@ -122,16 +140,18 @@ public class TokenService {
 
         RefreshToken refresh = new RefreshToken();
         refresh.setAccount(account);
-        refresh.setFamilyId(UUID.randomUUID());
+        refresh.setFamilyId(familyId);
         refresh.setTokenHash(hashRefreshToken(rawRefreshToken));
         refresh.setExpiresAt(now.plus(refreshTtl));
 
         //Save Refresh Token
-        refreshTokenRepository.save(refresh);
+        refresh = refreshTokenRepository.saveAndFlush(refresh);
         log.debug("Đã chuẩn bị cặp token cho accountId={}, đang chờ transaction hoàn tất", account.getId());
 
-        return new IssuedTokens(accessToken, rawRefreshToken, now.plus(accessTtl), now.plus(refreshTtl));
+        return new IssuedRefresh(new IssuedTokens(accessToken, rawRefreshToken, now.plus(accessTtl), now.plus(refreshTtl)), refresh.getId());
     }
+
+    private record IssuedRefresh(IssuedTokens tokens, UUID refreshId) {}
 
     /**
      * Tính hash SHA-256 của refresh token để lưu hoặc tra cứu.
@@ -147,19 +167,4 @@ public class TokenService {
         }
     }
 
-    /**
-     * Cặp token đã phát hành và thời điểm hết hạn tương ứng.
-     *
-     * @param accessToken      access JWT
-     * @param refreshToken     refresh token gốc
-     * @param accessExpiresAt  thời điểm access token hết hạn
-     * @param refreshExpiresAt thời điểm refresh token hết hạn
-     */
-    public record IssuedTokens(String accessToken, String refreshToken, Instant accessExpiresAt,
-                               Instant refreshExpiresAt) {
-        @Override
-        public String toString() {
-            return "IssuedTokens[redacted]";
-        }
-    }
 }

@@ -1,5 +1,6 @@
 package com.mentormatching.auth.service;
 
+import com.mentormatching.auth.service.dto.IssuedTokens;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Locale;
@@ -48,7 +49,7 @@ public class LoginUseCase {
      * @return cặp token đã phát hành
      */
     @Transactional
-    public TokenService.IssuedTokens login(LoginCommand command) {
+    public IssuedTokens login(LoginCommand command) {
 
         if (command == null || command.email() == null || command.password() == null) {
             throw invalidCredentials();
