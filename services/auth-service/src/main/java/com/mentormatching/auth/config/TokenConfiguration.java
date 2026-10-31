@@ -15,7 +15,6 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
@@ -27,14 +26,12 @@ public class TokenConfiguration {
 
     /**
      * Đọc khóa RSA riêng định dạng PKCS#8 và tạo JWK chứa cặp khóa để ký JWT.
-     * Khởi tạo khi cần để ứng dụng có thể chạy trước khi cấu hình chức năng phát hành token.
      *
      * @param privateKeyPath đường dẫn đến file private key định dạng PEM
      * @return JWK chứa khóa RSA
      * @throws Exception khi khóa không hợp lệ hoặc không thể tạo khóa công khai
      */
     @Bean
-    @Lazy
     RSAKey jwtSigningKey(@Value("${auth.jwt.private-key-path}") String privateKeyPath) throws Exception {
 
         String pemKey = Files.readString(Path.of(privateKeyPath));
@@ -77,14 +74,11 @@ public class TokenConfiguration {
 
     /**
      * Tạo bộ mã hóa JWT sử dụng khóa RSA; chữ ký được tạo khi gọi encode.
-     * Lazy trì hoãn việc đọc và kiểm tra khóa đến khi cần phát hành token;
-     * cấu hình thiếu hoặc sai sẽ gây lỗi tại thời điểm đó thay vì khi khởi động.
      *
      * @param jwtSigningKey JWK chứa khóa ký
      * @return bộ mã hóa và ký JWT
      */
     @Bean
-    @Lazy
     JwtEncoder jwtEncoder(RSAKey jwtSigningKey) {
         return new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(jwtSigningKey)));
     }

@@ -76,7 +76,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
                                                                   HttpHeaders headers, HttpStatusCode status, WebRequest webRequest) {
-        ProblemDetail problem = problems.create(status, "VALIDATION_ERROR", "One or more fields are invalid.",
+        ProblemDetail problem = problems.create(status, ErrorCode.VALIDATION_ERROR, "One or more fields are invalid.",
                 ((ServletWebRequest) webRequest).getRequest());
         List<FieldViolation> errors = ex.getBindingResult().getAllErrors().stream()
                 .map(error -> new FieldViolation(
@@ -117,7 +117,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (!status.is4xxClientError()) {
             return handleExceptionInternal(ex, null, headers, status, webRequest);
         }
-        ProblemDetail problem = problems.create(status, "VALIDATION_ERROR", "One or more request parameters are invalid.",
+        ProblemDetail problem = problems.create(status, ErrorCode.VALIDATION_ERROR, "One or more request parameters are invalid.",
                 ((ServletWebRequest) webRequest).getRequest());
         problem.setProperty("errors", ex.getParameterValidationResults().stream()
                 .map(result -> {
