@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
  */
 public class ApiException extends RuntimeException {
     private final HttpStatus status;
-    private final String code;
+    private final ErrorCode code;
 
     /**
      * Tạo lỗi nghiệp vụ với status 4xx và mã lỗi ổn định.
@@ -18,14 +18,14 @@ public class ApiException extends RuntimeException {
      * @param status HTTP status của lỗi
      * @param code mã lỗi ổn định, ví dụ EMAIL_ALREADY_EXISTS
      * @param publicMessage thông báo nghiệp vụ an toàn được trả trực tiếp cho client
-     * @throws IllegalArgumentException nếu status không phải 4xx hoặc code sai định dạng
+     * @throws IllegalArgumentException nếu status không phải 4xx hoặc code là null
      */
-    public ApiException(HttpStatus status, String code, String publicMessage) {
+    public ApiException(HttpStatus status, ErrorCode code, String publicMessage) {
         super(publicMessage);
         if (status == null || !status.is4xxClientError()) {
             throw new IllegalArgumentException("ApiException requires a 4xx status");
         }
-        if (code == null || !code.matches("[A-Z][A-Z0-9_]*")) {
+        if (code == null) {
             throw new IllegalArgumentException("A stable uppercase error code is required");
         }
         this.status = status;
@@ -44,9 +44,9 @@ public class ApiException extends RuntimeException {
     /**
      * Lấy mã lỗi ổn định để client xử lý mà không phụ thuộc thông báo hiển thị.
      *
-     * @return mã lỗi dạng chữ hoa và dấu gạch dưới
+     * @return mã lỗi thuộc ErrorCode
      */
-    public String getCode() {
+    public ErrorCode getCode() {
         return code;
     }
 }
