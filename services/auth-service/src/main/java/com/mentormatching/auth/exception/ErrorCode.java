@@ -1,0 +1,23 @@
+package com.mentormatching.auth.exception;
+
+/**
+ * Các mã lỗi ổn định được Auth Service trả về cho client.
+ */
+public enum ErrorCode {
+    VALIDATION_ERROR,
+    INVALID_REGISTRATION,
+    PASSWORD_MISMATCH,
+    EMAIL_ALREADY_EXISTS,
+    INVALID_REQUEST,
+    AUTHENTICATION_REQUIRED,
+    ACCESS_DENIED,
+    RESOURCE_NOT_FOUND,
+    METHOD_NOT_ALLOWED,
+    NOT_ACCEPTABLE,
+    CONFLICT,
+    UNSUPPORTED_MEDIA_TYPE,
+    TOO_MANY_REQUESTS,
+    SERVICE_UNAVAILABLE,
+    INTERNAL_SERVER_ERROR,
+    REQUEST_REJECTED
+}
